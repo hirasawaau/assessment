@@ -20,25 +20,6 @@ jobs:
         with:
           version: latest
 
-  # build:
-  #   name: build
-  #   runs-on: ubuntu-20.04
-    
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - uses: actions/setup-go@v3
-  #       with:
-  #         go-version: 1.19
-      
-  #     - name: Prepair GHCR
-  #       run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
-      
-  #     - name: Build
-  #       run: docker build -t ghcr.io/${{ secrets.GHCR_USER }}/assessment:latest .
-      
-  #     - name: Push
-  #       run: docker push ghcr.io/${{ secrets.GHCR_USER }}/assessment:latest
-
   integration_test:
     name: integration_test
     runs-on: ubuntu-20.04
