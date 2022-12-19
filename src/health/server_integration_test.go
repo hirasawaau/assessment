@@ -1,5 +1,5 @@
 // go:build integration
-package controller_test
+package health_test
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hirasawaau/assessment/controller"
+	"github.com/hirasawaau/assessment/src/health"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +23,7 @@ func TestHealth(t *testing.T) {
 
 		defer resp.Body.Close()
 
-		var resp_body controller.Health
+		var resp_body health.Health
 
 		err = json.NewDecoder(resp.Body).Decode(&resp_body)
 

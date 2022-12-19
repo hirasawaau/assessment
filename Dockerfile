@@ -1,14 +1,14 @@
-FROM golang:1.19.4-alpine3.17
+FROM golang:1.19.3-alpine
 
-WORKDIR /app
+WORKDIR /go/src/github.com/hirasawaau/assessment
 
-COPY go.mod go.sum ./
-RUN go mod download
-
+COPY go.* ./
 COPY *.go ./
+COPY src ./src
+ENV PORT=2565
+RUN go mod download
+RUN CGO_ENABLED=0 go build -o a.out server.go
 
-RUN go build -o /main
+EXPOSE 2565
 
-ENV PORT 2565
-
-CMD [ "./main" ]
+CMD ["./a.out"]

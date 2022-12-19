@@ -20,15 +20,41 @@ jobs:
         with:
           version: latest
 
+  # build:
+  #   name: build
+  #   runs-on: ubuntu-20.04
+    
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-go@v3
+  #       with:
+  #         go-version: 1.19
+      
+  #     - name: Prepair GHCR
+  #       run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
+      
+  #     - name: Build
+  #       run: docker build -t ghcr.io/${{ secrets.GHCR_USER }}/assessment:latest .
+      
+  #     - name: Push
+  #       run: docker push ghcr.io/${{ secrets.GHCR_USER }}/assessment:latest
+
   integration_test:
-    name: build
+    name: integration_test
     runs-on: ubuntu-20.04
+    
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      
       - name: Clean image
-        run: docker compose -f docker-compose.test.yml down
+        run: docker compose down
+      - name: Build image
+        run: docker compose up --build -d
       - name: Test
-        run: docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from app-test
+        run: go run test -v --tags=integration ./...
         
   unit_test:
     runs-on: ubuntu-20.04

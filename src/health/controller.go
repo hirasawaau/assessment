@@ -1,4 +1,4 @@
-package controller
+package health
 
 import (
 	"github.com/labstack/echo/v4"

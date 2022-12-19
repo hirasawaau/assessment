@@ -17,10 +17,13 @@ services:
   #   networks:
   #     - kbtg-assign
 
-  app-test:
+  app:
     build: 
       context: .
-      dockerfile: Dockerfile.test
+      dockerfile: Dockerfile
+    ports:
+      - "2565:2565"
+    
 
 networks:
   kbtg-assign:

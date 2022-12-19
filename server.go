@@ -10,9 +10,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/hirasawaau/assessment/controller"
+	"github.com/hirasawaau/assessment/src/health"
 	"github.com/labstack/echo/v4"
 )
+
+type Health struct {
+	Status string `json:"status"`
+}
 
 func main() {
 	e := echo.New()
@@ -21,7 +25,7 @@ func main() {
 		PORT = "2565"
 	}
 
-	e.GET("/health", controller.GetHealthHandler)
+	e.GET("/health", health.GetHealthHandler)
 
 	go func() {
 		if err := e.Start(fmt.Sprintf(":%s", PORT)); err != nil && err != http.ErrServerClosed {
