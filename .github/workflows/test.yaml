@@ -83,7 +83,7 @@ jobs:
         with:
           context: .
           tags: |
-            ghcr.io/aorjoa-training/devops-go-example:${{ env.GITHUB_SHA }}
+            ghcr.io/hirasawaau/assessment:${{ env.GITHUB_SHA }}
           # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
 
