@@ -1,17 +1,17 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"os/signal"
 	"syscall"
 
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/hirasawaau/assessment/src/health"
-	"github.com/labstack/echo/v4"
 )
 
 type Health struct {
@@ -19,17 +19,19 @@ type Health struct {
 }
 
 func main() {
-	e := echo.New()
+	app := fiber.New()
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
 		PORT = "2565"
 	}
 
-	e.GET("/health", health.GetHealthHandler)
+	app.Use(logger.New())
+
+	app.Get("/health", health.GetHealthHandler)
 
 	go func() {
-		if err := e.Start(fmt.Sprintf(":%s", PORT)); err != nil && err != http.ErrServerClosed {
-			e.Logger.Fatal("Shutting down the server")
+		if err := app.Listen(fmt.Sprintf(":%s", PORT)); err != nil && err != http.ErrServerClosed {
+			log.Fatal("Shutting down the server")
 		}
 	}()
 
@@ -37,10 +39,7 @@ func main() {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 	<-shutdown
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatal(err)
+	if err := app.Shutdown(); err != nil {
+		log.Fatal(err)
 	}
 }
