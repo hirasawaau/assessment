@@ -21,10 +21,13 @@ jobs:
           version: latest
 
   integration_test:
-    name: build
+    name: integration_test
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
       - name: Clean Container
         run: docker compose down
       - name: Build Container
@@ -37,6 +40,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
       - name: Install Module
         run: go mod download
       - name: Test
