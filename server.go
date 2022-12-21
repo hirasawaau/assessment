@@ -10,13 +10,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/hirasawaau/assessment/src/health"
+	"github.com/go-playground/validator"
+	"github.com/hirasawaau/assessment/src/db"
+	"github.com/hirasawaau/assessment/src/utils"
+	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
+	_ "github.com/lib/pq"
 )
-
-type Health struct {
-	Status string `json:"status"`
-}
 
 func main() {
 	e := echo.New()
@@ -25,7 +25,18 @@ func main() {
 		PORT = "2565"
 	}
 
-	e.GET("/health", health.GetHealthHandler)
+	database, err := sqlx.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		panic(err)
+	}
+	defer database.Close()
+
+	if err = db.InitDB(database); err != nil {
+		e.Logger.Fatal(err)
+	}
+	e.Validator = &utils.Validator{Validator: validator.New()}
+
+	InjectApp(e, database)
 
 	go func() {
 		if err := e.Start(fmt.Sprintf(":%s", PORT)); err != nil && err != http.ErrServerClosed {

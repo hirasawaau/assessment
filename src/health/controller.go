@@ -8,9 +8,15 @@ type Health struct {
 	Status string `json:"status"`
 }
 
-func GetHealthHandler(c echo.Context) error {
-	h := Health{
-		Status: "OK",
-	}
-	return c.JSON(200, h)
+type HealthController struct {
+	Instance *echo.Echo
+}
+
+func (hc *HealthController) getHealthHandler(c echo.Context) error {
+	return c.JSON(200, Health{Status: "OK"})
+}
+
+func (hc *HealthController) Handle() {
+	g := hc.Instance.Group("/health")
+	g.GET("", hc.getHealthHandler)
 }
