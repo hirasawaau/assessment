@@ -14,6 +14,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/hirasawaau/assessment/src/expenses"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,12 +50,16 @@ func TestPostExpenses(t *testing.T) {
 			}
 			`
 			dto := new(expenses.ExpensesDto)
+
 			assert.NoError(t, json.Unmarshal([]byte(payload), dto))
 
 			req := httptest.NewRequest(fiber.MethodPost, "/expenses", strings.NewReader(payload))
 			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-			QUERY_STR := "INSERT INTO expenses (title, amount, note, tags) VALUES ($1, $2, $3, $4) RETURNING id,title,amount,note,tags"
-			mock.ExpectQuery(QUERY_STR)
+			INSERT_STR := "INSERT INTO expenses"
+			mock.ExpectExec(INSERT_STR).WithArgs(dto.Title, dto.Amount, dto.Note, pq.Array(dto.Tags)).WillReturnResult(sqlmock.NewResult(1, 1))
+			QUERY_STR := "SELECT id,title,amount,note,tags FROM expenses"
+			expectedRows := sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).AddRow(1, dto.Title, dto.Amount, dto.Note, pq.Array(dto.Tags))
+			mock.ExpectQuery(QUERY_STR).WithArgs(1).WillReturnRows(expectedRows)
 
 			rec, err := app.Test(req, 100)
 
@@ -69,7 +74,7 @@ func TestPostExpenses(t *testing.T) {
 				assert.Equal(t, dto.Title, resp.Title)
 				assert.Equal(t, dto.Amount, resp.Amount)
 				assert.Equal(t, dto.Note, resp.Note)
-				assert.Equal(t, dto.Tags, resp.Tags)
+				assert.Equal(t, pq.StringArray{dto.Tags[0]}, resp.Tags)
 			}
 		})
 
@@ -88,7 +93,7 @@ func TestPostExpenses(t *testing.T) {
 
 			rec, err := app.Test(req, 100)
 			assert.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, rec.Status)
+			assert.Equal(t, http.StatusBadRequest, rec.StatusCode)
 		})
 	})
 }
