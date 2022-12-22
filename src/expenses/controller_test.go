@@ -4,7 +4,7 @@ package expenses_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -67,7 +67,7 @@ func TestPostExpenses(t *testing.T) {
 				assert.Equal(t, http.StatusCreated, rec.StatusCode)
 				resp := new(expenses.ExpenseEntity)
 
-				bodyResp, err := ioutil.ReadAll(rec.Body)
+				bodyResp, err := io.ReadAll(rec.Body)
 				assert.NoError(t, err)
 				assert.NoError(t, json.Unmarshal(bodyResp, resp))
 
