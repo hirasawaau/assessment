@@ -10,7 +10,7 @@ import (
 
 type ExpensesController struct {
 	Instance *fiber.App
-	Service  *ExpensesService
+	Service  IExpensesService
 }
 
 type ExpensesDto struct {

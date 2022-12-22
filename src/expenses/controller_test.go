@@ -4,94 +4,73 @@
 package expenses_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
-	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gofiber/fiber/v2"
 	"github.com/hirasawaau/assessment/src/expenses"
-	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 )
 
+type MockService struct {
+	CreatedCalled int
+	GetCalled     int
+}
+
+func (m *MockService) CreateExpense(expense expenses.ExpenseEntity) (*expenses.ExpenseEntity, error) {
+	m.CreatedCalled++
+	return m.GetExpenseById(1)
+}
+
+func (m *MockService) GetExpenseById(id int64) (*expenses.ExpenseEntity, error) {
+	m.GetCalled++
+	return &expenses.ExpenseEntity{
+		ID:     1,
+		Title:  "Test",
+		Amount: 1,
+		Note:   "Test Expense",
+		Tags:   []string{"Hello"},
+	}, nil
+}
+
 func TestPostExpenses(t *testing.T) {
-
-	db, mock, err := sqlmock.New()
-	sqlx_db := sqlx.NewDb(db, "postgres")
-
-	if err != nil {
-		t.Fatal(err)
+	mockService := &MockService{}
+	controller := &expenses.ExpensesController{
+		Service: mockService,
 	}
+
 	app := fiber.New()
 
-	controller := expenses.ExpensesController{
-		Instance: app,
-		Service: &expenses.ExpensesService{
-			DB: sqlx_db,
-		},
-	}
-	t.Run("Create Expenses", func(t *testing.T) {
+	app.Post("/expenses", controller.PostExpensesHandler)
 
-		controller.Handle()
-		t.Run("Should return correct result", func(t *testing.T) {
-			payload := `
-			{
-				"title": "Test",
-				"amount": 1,
-				"note": "Test Expense",
-				"tags": [
-					"Hello"
-				]
-			}
-			`
-			dto := new(expenses.ExpensesDto)
-
-			assert.NoError(t, json.Unmarshal([]byte(payload), dto))
-
-			req := httptest.NewRequest(fiber.MethodPost, "/expenses", strings.NewReader(payload))
-			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-			INSERT_STR := "INSERT INTO expenses"
-			mock.ExpectQuery(INSERT_STR).WithArgs(dto.Title, dto.Amount, dto.Note, pq.Array(dto.Tags)).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-			QUERY_STR := "SELECT * FROM expenses WHERE id = $1"
-			mock.ExpectQuery(QUERY_STR).WithArgs(1).WillReturnRows(sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).AddRow(1, dto.Title, dto.Amount, dto.Note, pq.Array(dto.Tags)))
-			rec, err := app.Test(req, 100)
-
-			if assert.NoError(t, err) {
-				assert.Equal(t, http.StatusCreated, rec.StatusCode)
-				resp := new(expenses.ExpenseEntity)
-
-				bodyResp, err := io.ReadAll(rec.Body)
-				assert.NoError(t, err)
-				assert.NoError(t, json.Unmarshal(bodyResp, resp))
-
-				assert.Equal(t, dto.Title, resp.Title)
-				assert.Equal(t, dto.Amount, resp.Amount)
-				assert.Equal(t, dto.Note, resp.Note)
-				assert.Equal(t, pq.StringArray{dto.Tags[0]}, resp.Tags)
-			}
-		})
-
-		t.Run("Should return error when property is not completed", func(t *testing.T) {
-			payload := `
-			{
-				"title": "Test",
-				"note": "Test Expense",
-				"tags": [
-					"Hello"
-				]
-			}
-			`
-
-			req := httptest.NewRequest(fiber.MethodPost, "/expenses", strings.NewReader(payload))
-
-			rec, err := app.Test(req, 100)
+	t.Run("should create expense with correct arguments", func(t *testing.T) {
+		dto := expenses.ExpensesDto{
+			Title:  "Test",
+			Amount: 1,
+			Note:   "Test Expense",
+			Tags:   pq.StringArray{"Hello"},
+		}
+		payload, err := json.Marshal(dto)
+		assert.NoError(t, err)
+		req := httptest.NewRequest(fiber.MethodPost, "/expenses", bytes.NewReader(payload))
+		req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+		resp, err := app.Test(req, 100)
+		if assert.NoError(t, err) {
+			assert.Equal(t, 1, mockService.CreatedCalled)
+			assert.Equal(t, fiber.StatusCreated, resp.StatusCode)
+			respEntity := new(expenses.ExpenseEntity)
+			resp_bytes, err := io.ReadAll(resp.Body)
 			assert.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, rec.StatusCode)
-		})
+			err = json.Unmarshal(resp_bytes, respEntity)
+			assert.NoError(t, err)
+			assert.Equal(t, dto.Title, respEntity.Title)
+			assert.Equal(t, dto.Amount, respEntity.Amount)
+			assert.Equal(t, dto.Note, respEntity.Note)
+			assert.ElementsMatch(t, dto.Tags, respEntity.Tags)
+		}
 	})
 }

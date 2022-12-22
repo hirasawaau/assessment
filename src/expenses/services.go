@@ -11,6 +11,11 @@ type ExpensesService struct {
 	DB *sqlx.DB
 }
 
+type IExpensesService interface {
+	CreateExpense(e ExpenseEntity) (*ExpenseEntity, error)
+	GetExpenseById(id int64) (*ExpenseEntity, error)
+}
+
 type ExpenseEntity struct {
 	ID     int            `json:"id" db:"id"`
 	Title  string         `json:"title" db:"title"`
