@@ -12,9 +12,20 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/hirasawaau/assessment/src/db"
+	"github.com/hirasawaau/assessment/src/expenses"
+	"github.com/hirasawaau/assessment/src/health"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
+
+func InjectApp(app *fiber.App, db *sqlx.DB) {
+	healthController := health.HealthController{Instance: app}
+	healthController.Handle()
+
+	expensesService := expenses.ExpensesService{DB: db}
+	expensesController := expenses.ExpensesController{Instance: app, Service: &expensesService}
+	expensesController.Handle()
+}
 
 func main() {
 	app := fiber.New()
@@ -25,13 +36,11 @@ func main() {
 
 	app.Use(logger.New())
 
-	database, err := sqlx.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		panic(err)
-	}
+	database := sqlx.MustOpen("postgres", os.Getenv("DATABASE_URL"))
+
 	defer database.Close()
 
-	if err = db.InitDB(database); err != nil {
+	if err := db.InitDB(database); err != nil {
 		log.Fatal(err)
 	}
 

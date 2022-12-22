@@ -10,8 +10,7 @@ func InitDB(d *sqlx.DB) error {
 		"title" VARCHAR(255) NOT NULL,
 		"amount" INT NOT NULL,
 		"note" TEXT NOT NULL,
-		"category" TEXT NOT NULL,
-		"tags" VARCHAR(255) [] NOT NULL,
+		"tags" VARCHAR(255) [] NOT NULL
 	);
 	`)
 

@@ -20,22 +20,26 @@ type ExpenseEntity struct {
 }
 
 func (es *ExpensesService) CreateExpense(e ExpenseEntity) (*ExpenseEntity, error) {
+	var insertedId int64
+	INSERT_STRING := "INSERT INTO expenses (title, amount, note, tags) VALUES ($1, $2, $3, $4) RETURNING id"
+	if err := es.DB.QueryRowx(INSERT_STRING, e.Title, e.Amount, e.Note, pq.Array(e.Tags)).Scan(&insertedId); err != nil {
+		return nil, err
+	}
+
+	res, err := es.GetExpenseById(insertedId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (es *ExpensesService) GetExpenseById(id int64) (*ExpenseEntity, error) {
 	res := new(ExpenseEntity)
-	INSERT_STRING := "INSERT INTO expenses (title, amount, note, tags) VALUES ($1, $2, $3, $4) RETURNING id,title,amount,note,tags"
-	result, err := es.DB.Exec(INSERT_STRING, e.Title, e.Amount, e.Note, pq.Array(e.Tags))
-	if err != nil {
-		return nil, err
-	}
-
-	lastId, err := result.LastInsertId()
-	if err != nil {
-		return nil, err
-	}
-
-	err = es.DB.Get(res, "SELECT id,title,amount,note,tags FROM expenses WHERE id = $1", lastId)
-
-	if err != nil {
-		fmt.Println("This Error")
+	QUERY_STRING := "SELECT * FROM expenses WHERE id = $1"
+	if err := es.DB.QueryRowx(QUERY_STRING, id).StructScan(res); err != nil {
+		fmt.Println("THIS ERROR")
 		return nil, err
 	}
 

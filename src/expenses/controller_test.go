@@ -1,4 +1,5 @@
-//go build:unit
+//go:build unit
+// +build unit
 
 package expenses_test
 
@@ -38,7 +39,6 @@ func TestPostExpenses(t *testing.T) {
 
 		controller.Handle()
 		t.Run("Should return correct result", func(t *testing.T) {
-
 			payload := `
 			{
 				"title": "Test",
@@ -56,11 +56,9 @@ func TestPostExpenses(t *testing.T) {
 			req := httptest.NewRequest(fiber.MethodPost, "/expenses", strings.NewReader(payload))
 			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 			INSERT_STR := "INSERT INTO expenses"
-			mock.ExpectExec(INSERT_STR).WithArgs(dto.Title, dto.Amount, dto.Note, pq.Array(dto.Tags)).WillReturnResult(sqlmock.NewResult(1, 1))
-			QUERY_STR := "SELECT id,title,amount,note,tags FROM expenses"
-			expectedRows := sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).AddRow(1, dto.Title, dto.Amount, dto.Note, pq.Array(dto.Tags))
-			mock.ExpectQuery(QUERY_STR).WithArgs(1).WillReturnRows(expectedRows)
-
+			mock.ExpectQuery(INSERT_STR).WithArgs(dto.Title, dto.Amount, dto.Note, pq.Array(dto.Tags)).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+			QUERY_STR := "SELECT * FROM expenses WHERE id = $1"
+			mock.ExpectQuery(QUERY_STR).WithArgs(1).WillReturnRows(sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).AddRow(1, dto.Title, dto.Amount, dto.Note, pq.Array(dto.Tags)))
 			rec, err := app.Test(req, 100)
 
 			if assert.NoError(t, err) {
