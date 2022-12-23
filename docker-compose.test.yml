@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.7'
 
 services:
   # db:
@@ -16,27 +16,12 @@ services:
   #     - ./db:/docker-entrypoint-initdb.d/
   #   networks:
   #     - kbtg-assign
-
-  test:
+  it_tests: 
     build: 
       context: .
       dockerfile: Dockerfile.test
-    ports:
-      - "2565:2565"
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@database:5432/postgres?sslmode=disable
-    networks:
-      - kbtg-assign
-
-  app:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "2565:2565"
+    image: it_tests
+    volumes:
+      - $PWD:/go/src/github.com/hirasawaau/assessment
     
 
-networks:
-  kbtg-assign:
-    driver: bridge
-    

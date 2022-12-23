@@ -35,10 +35,9 @@ jobs:
           go-version: 1.19
       - name: Clean Container
         run: docker compose down
-      - name: Build Container
-        run: docker compose up -d
-      - name: Test
-        run: go test -v --tags=integration ./...
+      - name: Test Container
+        run: docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from it_tests
+      
 
   unit_test:
     runs-on: ubuntu-20.04
@@ -83,7 +82,7 @@ jobs:
         with:
           context: .
           tags: |
-            ghcr.io/aorjoa-training/devops-go-example:${{ env.GITHUB_SHA }}
+            ghcr.io/hirasawaau/assessment:${{ env.GITHUB_SHA }}
           # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
 
