@@ -2,13 +2,13 @@ FROM golang:1.19.3-alpine
 
 WORKDIR /go/src/github.com/hirasawaau/assessment
 
+ENV DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
+
 COPY go.* ./
 COPY *.go ./
 COPY src ./src
 
-ENV DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
-
 RUN go mod download
 
-CMD "go test -v -tags integration ./..."
+CMD CGO_ENABLED=0 go test --tags=integration ./...
 
