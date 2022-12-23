@@ -17,6 +17,17 @@ services:
     networks:
       - kbtg-assign
 
+  test:
+    build: 
+      context: .
+      dockerfile: Dockerfile.test
+    ports:
+      - "2565:2565"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@database:5432/postgres?sslmode=disable
+    networks:
+      - kbtg-assign
+
   app:
     build: 
       context: .

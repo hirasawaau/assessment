@@ -6,17 +6,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"testing"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/hirasawaau/assessment/src/health"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHealth(t *testing.T) {
-	ADDR := fmt.Sprintf("http://localhost:%s/health", os.Getenv("PORT"))
+	app := fiber.New()
+	app.Get("/health", health.GetHealthHandler)
 	t.Run("GET /health", func(t *testing.T) {
-		resp, err := http.Get(ADDR)
+		req, err := http.NewRequest(fiber.MethodGet, "/health", nil)
+		assert.NoError(t, err)
+		resp, err := app.Test(req, 10000)
 
 		assert.NoError(t, err)
 
