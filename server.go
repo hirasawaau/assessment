@@ -11,9 +11,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/hirasawaau/assessment/src/db"
 	"github.com/hirasawaau/assessment/src/expenses"
 	"github.com/hirasawaau/assessment/src/health"
+	"github.com/hirasawaau/assessment/src/utils"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -36,15 +36,15 @@ func main() {
 
 	app.Use(logger.New())
 
-	database := sqlx.MustOpen("postgres", os.Getenv("DATABASE_URL"))
+	db := sqlx.MustOpen("postgres", os.Getenv("DATABASE_URL"))
 
-	defer database.Close()
+	defer db.Close()
 
-	if err := db.InitDB(database); err != nil {
+	if err := utils.InitDB(db); err != nil {
 		log.Fatal(err)
 	}
 
-	InjectApp(app, database)
+	utils.InjectApp(app, db)
 
 	go func() {
 		if err := app.Listen(fmt.Sprintf(":%s", PORT)); err != nil && err != http.ErrServerClosed {
