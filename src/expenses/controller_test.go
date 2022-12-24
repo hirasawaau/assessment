@@ -74,6 +74,23 @@ func TestPostExpenses(t *testing.T) {
 			assert.ElementsMatch(t, dto.Tags, respEntity.Tags)
 		}
 	})
+
+	t.Run("should return 400 when title is empty", func(t *testing.T) {
+		dto := expenses.ExpensesDto{
+			Amount: 1,
+			Note:   "Test Expense",
+			Tags:   pq.StringArray{"Hello"},
+		}
+		payload, err := json.Marshal(dto)
+		assert.NoError(t, err)
+		req := httptest.NewRequest(fiber.MethodPost, "/expenses", bytes.NewReader(payload))
+		req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+		resp, err := app.Test(req, 100)
+		if assert.NoError(t, err) {
+			assert.Equal(t, 1, mockService.CreatedCalled)
+			assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+		}
+	})
 }
 
 func TestGetExpensesById(t *testing.T) {
