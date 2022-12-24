@@ -8,9 +8,15 @@ type Health struct {
 	Status string `json:"status"`
 }
 
-func GetHealthHandler(c *fiber.Ctx) error {
-	h := Health{
-		Status: "OK",
-	}
-	return c.Status(fiber.StatusOK).JSON(h)
+type HealthController struct {
+	Instance *fiber.App
+}
+
+func (hc *HealthController) getHealthHandler(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusOK).JSON(Health{Status: "OK"})
+}
+
+func (hc *HealthController) Handle() {
+	g := hc.Instance.Group("/health")
+	g.Get("", hc.getHealthHandler)
 }

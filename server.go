@@ -11,11 +11,20 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/hirasawaau/assessment/src/expenses"
 	"github.com/hirasawaau/assessment/src/health"
+	"github.com/hirasawaau/assessment/src/utils"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
-type Health struct {
-	Status string `json:"status"`
+func InjectApp(app *fiber.App, db *sqlx.DB) {
+	healthController := health.HealthController{Instance: app}
+	healthController.Handle()
+
+	expensesService := expenses.ExpensesService{DB: db}
+	expensesController := expenses.ExpensesController{Instance: app, Service: &expensesService}
+	expensesController.Handle()
 }
 
 func main() {
@@ -27,7 +36,15 @@ func main() {
 
 	app.Use(logger.New())
 
-	app.Get("/health", health.GetHealthHandler)
+	db := sqlx.MustOpen("postgres", os.Getenv("DATABASE_URL"))
+
+	defer db.Close()
+
+	if err := utils.InitDB(db); err != nil {
+		log.Fatal(err)
+	}
+
+	utils.InjectApp(app, db)
 
 	go func() {
 		if err := app.Listen(fmt.Sprintf(":%s", PORT)); err != nil && err != http.ErrServerClosed {

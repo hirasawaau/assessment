@@ -10,14 +10,24 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hirasawaau/assessment/src/health"
+	"github.com/hirasawaau/assessment/src/utils"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHealth(t *testing.T) {
-	app := fiber.New()
-	app.Get("/health", health.GetHealthHandler)
+const PORT = 3030
+
+var HOST = fmt.Sprintf("localhost:%d", PORT)
+
+func TestHealthControllerItTest(t *testing.T) {
+
 	t.Run("GET /health", func(t *testing.T) {
-		req, err := http.NewRequest(fiber.MethodGet, "/health", nil)
+		app := fiber.New()
+
+		go utils.StartIntegrationApp(t, app)
+
+		utils.WaitForConnection()
+
+		req, err := http.NewRequest(fiber.MethodGet, utils.ConcatUrl("health"), nil)
 		assert.NoError(t, err)
 		resp, err := app.Test(req, 10000)
 
@@ -35,5 +45,8 @@ func TestHealth(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, "OK", string(resp_body.Status))
+
+		err = app.Shutdown()
+		assert.NoError(t, err)
 	})
 }
