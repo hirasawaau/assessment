@@ -26,11 +26,14 @@ func StartIntegrationApp(t *testing.T, app *fiber.App) error {
 
 	assert.NoError(t, err)
 
-	InitDB(db)
+	err = InitDB(db)
 
+	assert.NoError(t, err)
 	InjectApp(app, db)
 
-	app.Listen(fmt.Sprintf(":%d", PORT))
+	err = app.Listen(fmt.Sprintf(":%d", PORT))
+
+	assert.NoError(t, err)
 
 	return nil
 }
