@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"log"
+	"net"
 	"os"
 	"strings"
 	"testing"
@@ -11,11 +13,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ConcatUrl(base string, path ...string) string {
-	return fmt.Sprintf("http://%s/", base) + strings.Join(path, "/")
+const PORT = 3000
+
+var BASE_URL = fmt.Sprintf("127.0.0.1:%d", PORT)
+
+func ConcatUrl(path ...string) string {
+	return fmt.Sprintf("http://%s/", BASE_URL) + strings.Join(path, "/")
 }
 
-func IntegrationApp(t *testing.T, app *fiber.App, port int) error {
+func StartIntegrationApp(t *testing.T, app *fiber.App) error {
 	db, err := sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
 
 	assert.NoError(t, err)
@@ -24,7 +30,21 @@ func IntegrationApp(t *testing.T, app *fiber.App, port int) error {
 
 	InjectApp(app, db)
 
-	app.Listen(fmt.Sprintf(":%d", port))
+	app.Listen(fmt.Sprintf(":%d", PORT))
 
 	return nil
+}
+
+func WaitForConnection() {
+
+	for {
+		conn, err := net.Dial("tcp", BASE_URL)
+		if err != nil {
+			log.Println("Retrying to Connect", err)
+		}
+		if conn != nil {
+			conn.Close()
+			return
+		}
+	}
 }

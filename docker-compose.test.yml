@@ -1,27 +1,32 @@
 version: '3.7'
 
 services:
-  # db:
-  #   image: postgres:15.1
-  #   ports:
-  #     - "5432:5432"
-  #   expose:
-  #     - 5432
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_DB: postgres
-  #   restart: on-failure
-  #   volumes:
-  #     - ./db:/docker-entrypoint-initdb.d/
-  #   networks:
-  #     - kbtg-assign
+  database:
+    image: postgres:15.1
+    ports:
+      - "5432:5432"
+    expose:
+      - 5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    restart: on-failure
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d/
+    networks:
+      - kbtg-assign
   it_tests: 
     build: 
       context: .
       dockerfile: Dockerfile.test
-    image: it_tests
-    volumes:
-      - $PWD:/go/src/github.com/hirasawaau/assessment
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@database:5432/postgres?sslmode=disable
+    networks:
+      - kbtg-assign
+    depends_on:
+      - database
     
-
+networks:
+  kbtg-assign:
+    driver: bridge

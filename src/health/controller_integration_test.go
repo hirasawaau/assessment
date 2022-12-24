@@ -5,11 +5,8 @@ package health_test
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"net"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hirasawaau/assessment/src/health"
@@ -26,20 +23,11 @@ func TestHealthControllerItTest(t *testing.T) {
 	t.Run("GET /health", func(t *testing.T) {
 		app := fiber.New()
 
-		go utils.IntegrationApp(t, app, PORT)
+		go utils.StartIntegrationApp(t, app)
 
-		for {
-			conn, err := net.DialTimeout("tcp", HOST, 30*time.Second)
-			if err != nil {
-				log.Println(err)
-			}
-			if conn != nil {
-				conn.Close()
-				break
-			}
-		}
+		utils.WaitForConnection()
 
-		req, err := http.NewRequest(fiber.MethodGet, utils.ConcatUrl(HOST, "health"), nil)
+		req, err := http.NewRequest(fiber.MethodGet, utils.ConcatUrl("health"), nil)
 		assert.NoError(t, err)
 		resp, err := app.Test(req, 10000)
 
