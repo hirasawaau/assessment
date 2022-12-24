@@ -26,5 +26,8 @@ func TestGetHealthItTest(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 		}
+
+		err = app.Shutdown()
+		assert.NoError(t, err)
 	})
 }
