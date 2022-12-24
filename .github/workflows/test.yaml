@@ -10,7 +10,7 @@ on:
 
 jobs:
   golangci:
-    name: lint
+    name: Lint
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/setup-go@v3
@@ -23,7 +23,7 @@ jobs:
           version: latest
 
   integration_test:
-    name: integration_test
+    name: Integration Test
     runs-on: ubuntu-20.04
     
     steps:
@@ -38,6 +38,7 @@ jobs:
       
 
   unit_test:
+    name: Unit Test
     runs-on: ubuntu-20.04
 
     steps:
@@ -51,7 +52,7 @@ jobs:
         run: go test -v --tags=unit ./...
 
   build-and-push-docker-image:
-    name: Build Docker image and push to repositories
+    name: Build & Push Docker Image
     runs-on: ubuntu-latest
     needs: 
       - "golangci"

@@ -6,6 +6,7 @@ package expenses_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http/httptest"
 	"testing"
@@ -29,7 +30,7 @@ func (m *MockService) CreateExpense(expense expenses.ExpenseEntity) (*expenses.E
 func (m *MockService) GetExpenseById(id int64) (*expenses.ExpenseEntity, error) {
 	m.GetCalled++
 	return &expenses.ExpenseEntity{
-		ID:     1,
+		ID:     id,
 		Title:  "Test",
 		Amount: 1,
 		Note:   "Test Expense",
@@ -88,6 +89,36 @@ func TestPostExpenses(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.Equal(t, 1, mockService.CreatedCalled)
 			assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+		}
+	})
+}
+
+func TestGetExpensesById(t *testing.T) {
+	mockService := &MockService{}
+	controller := &expenses.ExpensesController{
+		Service: mockService,
+	}
+
+	app := fiber.New()
+
+	app.Get("/expenses/:id", controller.GetExpensesHandler)
+
+	t.Run("should get expense with correct arguments and return correctly", func(t *testing.T) {
+		id := int64(1)
+
+		req := httptest.NewRequest(fiber.MethodGet, fmt.Sprintf("/expenses/%d", id), nil)
+		resp, err := app.Test(req, 100)
+		if assert.NoError(t, err) {
+			assert.Equal(t, 1, mockService.GetCalled)
+			assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+			respEntity := new(expenses.ExpenseEntity)
+			resp_bytes, err := io.ReadAll(resp.Body)
+			fmt.Println(string(resp_bytes))
+			assert.NoError(t, err)
+			err = json.Unmarshal(resp_bytes, respEntity)
+			assert.NoError(t, err)
+			assert.Equal(t, id, respEntity.ID)
 		}
 	})
 }

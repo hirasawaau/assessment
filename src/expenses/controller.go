@@ -3,6 +3,7 @@ package expenses
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
@@ -46,7 +47,22 @@ func (ec *ExpensesController) PostExpensesHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(res)
 }
 
+func (ec *ExpensesController) GetExpensesHandler(c *fiber.Ctx) error {
+	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+	resp, err := ec.Service.GetExpenseById(id)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(resp)
+}
+
 func (ec *ExpensesController) Handle() {
 	g := ec.Instance.Group("/expenses")
 	g.Post("", ec.PostExpensesHandler)
+	g.Get(":id", ec.GetExpensesHandler)
 }
