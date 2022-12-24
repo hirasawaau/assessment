@@ -30,7 +30,7 @@ func (m *MockService) CreateExpense(expense expenses.ExpenseEntity) (*expenses.E
 func (m *MockService) GetExpenseById(id int64) (*expenses.ExpenseEntity, error) {
 	m.GetCalled++
 	return &expenses.ExpenseEntity{
-		ID:     1,
+		ID:     id,
 		Title:  "Test",
 		Amount: 1,
 		Note:   "Test Expense",
@@ -104,7 +104,7 @@ func TestGetExpensesById(t *testing.T) {
 	app.Get("/expenses/:id", controller.GetExpensesHandler)
 
 	t.Run("should get expense with correct arguments and return correctly", func(t *testing.T) {
-		id := 1
+		id := int64(1)
 
 		req := httptest.NewRequest(fiber.MethodGet, fmt.Sprintf("/expenses/%d", id), nil)
 		resp, err := app.Test(req, 100)
@@ -114,6 +114,7 @@ func TestGetExpensesById(t *testing.T) {
 
 			respEntity := new(expenses.ExpenseEntity)
 			resp_bytes, err := io.ReadAll(resp.Body)
+			fmt.Println(string(resp_bytes))
 			assert.NoError(t, err)
 			err = json.Unmarshal(resp_bytes, respEntity)
 			assert.NoError(t, err)

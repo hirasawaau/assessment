@@ -7,7 +7,9 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
@@ -44,10 +46,19 @@ func WaitForConnection() {
 		conn, err := net.Dial("tcp", BASE_URL)
 		if err != nil {
 			log.Println("Retrying to Connect", err)
+			time.Sleep(1 * time.Second)
 		}
 		if conn != nil {
 			conn.Close()
 			return
 		}
 	}
+}
+
+func GetMockDB() (*sqlx.DB, sqlmock.Sqlmock, error) {
+	db, mock, err := sqlmock.New()
+
+	dbx := sqlx.NewDb(db, "postgres")
+
+	return dbx, mock, err
 }

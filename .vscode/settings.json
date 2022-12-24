@@ -1,6 +1,6 @@
 {
   "gopls": {
-    "build.buildFlags": ["-tags=unit,integration"],
+    "build.buildFlags": ["-tags=unit,integration,seed"],
     "ui.semanticTokens": true
   }
 }

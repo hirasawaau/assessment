@@ -17,7 +17,7 @@ type IExpensesService interface {
 }
 
 type ExpenseEntity struct {
-	ID     int            `json:"id" db:"id"`
+	ID     int64          `json:"id" db:"id"`
 	Title  string         `json:"title" db:"title"`
 	Amount int            `json:"amount" db:"amount"`
 	Note   string         `json:"note" db:"note"`
@@ -44,7 +44,7 @@ func (es *ExpensesService) GetExpenseById(id int64) (*ExpenseEntity, error) {
 	res := new(ExpenseEntity)
 	QUERY_STRING := "SELECT * FROM expenses WHERE id = $1"
 	if err := es.DB.QueryRowx(QUERY_STRING, id).StructScan(res); err != nil {
-		fmt.Println("THIS ERROR")
+		fmt.Println("THIS ERROR", err)
 		return nil, err
 	}
 
