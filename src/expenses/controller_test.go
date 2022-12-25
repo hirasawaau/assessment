@@ -90,7 +90,7 @@ func TestPostExpenses(t *testing.T) {
 }
 
 func (m *MockService) GetExpenseById(id int64) (*expenses.ExpenseEntity, error) {
-	m.GetCalled++
+	m.GetsCalled++
 	return &expenses.ExpenseEntity{
 		ID:     id,
 		Title:  "Test",
