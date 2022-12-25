@@ -48,7 +48,7 @@ func TestIntegrationPostExpenses(t *testing.T) {
 
 }
 
-func TestIntegrationGetExpenses(t *testing.T) {
+func TestIntegrationGetExpense(t *testing.T) {
 
 	t.Run("Should return correct result", func(t *testing.T) {
 		app := fiber.New()
@@ -113,4 +113,33 @@ func TestIntegrationPutExpenses(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+}
+
+func TestIntegrationGetExpenses(t *testing.T) {
+	t.Run("Should return array that len >= 1", func(t *testing.T) {
+		app := fiber.New()
+		go utils.StartIntegrationApp(t, app)
+
+		utils.WaitForConnection()
+		req, err := http.NewRequest(fiber.MethodGet, utils.ConcatUrl("expenses"), nil)
+		assert.NoError(t, err)
+		req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+		client := http.Client{}
+		resp, err := client.Do(req)
+		assert.NoError(t, err)
+		bodyRes, err := io.ReadAll(resp.Body)
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+			resp_body := new([]expenses.ExpenseEntity)
+			err = json.Unmarshal(bodyRes, resp_body)
+			assert.NoError(t, err)
+			assert.GreaterOrEqual(t, len(*resp_body), 1)
+		}
+
+		assert.NoError(t, err)
+		err = app.Shutdown()
+		assert.NoError(t, err)
+	})
 }

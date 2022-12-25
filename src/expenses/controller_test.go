@@ -21,22 +21,12 @@ type MockService struct {
 	CreatedCalled int
 	GetCalled     int
 	UpdateCalled  int
+	GetsCalled    int
 }
 
 func (m *MockService) CreateExpense(expense expenses.ExpensesCreateDto) (*expenses.ExpenseEntity, error) {
 	m.CreatedCalled++
 	return m.GetExpenseById(1)
-}
-
-func (m *MockService) GetExpenseById(id int64) (*expenses.ExpenseEntity, error) {
-	m.GetCalled++
-	return &expenses.ExpenseEntity{
-		ID:     id,
-		Title:  "Test",
-		Amount: 1,
-		Note:   "Test Expense",
-		Tags:   []string{"Hello"},
-	}, nil
 }
 
 func (m *MockService) UpdateExpenseById(id int64, expense expenses.ExpensesUpdateDto) (*expenses.ExpenseEntity, error) {
@@ -97,6 +87,17 @@ func TestPostExpenses(t *testing.T) {
 			assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 		}
 	})
+}
+
+func (m *MockService) GetExpenseById(id int64) (*expenses.ExpenseEntity, error) {
+	m.GetCalled++
+	return &expenses.ExpenseEntity{
+		ID:     id,
+		Title:  "Test",
+		Amount: 1,
+		Note:   "Test Expense",
+		Tags:   []string{"Hello"},
+	}, nil
 }
 
 func TestGetExpensesById(t *testing.T) {
@@ -170,6 +171,38 @@ func TestPutExpenseById(t *testing.T) {
 			err = json.Unmarshal(resp_bytes, respEntity)
 			assert.NoError(t, err)
 			assert.Equal(t, id, respEntity.ID)
+		}
+	})
+
+}
+
+func (m *MockService) GetExpenses() ([]*expenses.ExpenseEntity, error) {
+	m.GetsCalled++
+	return []*expenses.ExpenseEntity{
+		{
+			ID:     1,
+			Title:  "Test",
+			Amount: 1,
+			Note:   "Test Expense",
+			Tags:   []string{"Hello"},
+		},
+	}, nil
+}
+
+func TestGetsExpenses(t *testing.T) {
+	mockService := &MockService{}
+	controller := &expenses.ExpensesController{
+		Service: mockService,
+	}
+
+	app := fiber.New()
+	app.Get("/expenses", controller.GetExpensesHandler)
+	t.Run("Should called get expenses service", func(t *testing.T) {
+		id := int64(1)
+		req := httptest.NewRequest(fiber.MethodPut, fmt.Sprintf("/expenses/%d", id), nil)
+		_, err := app.Test(req, 100)
+		if assert.NoError(t, err) {
+			assert.Equal(t, 1, mockService.GetsCalled)
 		}
 	})
 

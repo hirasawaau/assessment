@@ -90,9 +90,19 @@ func (ec *ExpensesController) PutExpensesHandler(c *fiber.Ctx) error {
 
 }
 
+func (ec *ExpensesController) GetExpenses(c *fiber.Ctx) error {
+	resp, err := ec.Service.GetExpenses()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(resp)
+}
+
 func (ec *ExpensesController) Handle() {
 	g := ec.Instance.Group("/expenses")
 	g.Post("", ec.PostExpensesHandler)
 	g.Get(":id", ec.GetExpensesHandler)
 	g.Put(":id", ec.PutExpensesHandler)
+	g.Get("", ec.GetExpenses)
 }
