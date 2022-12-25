@@ -198,8 +198,7 @@ func TestGetsExpenses(t *testing.T) {
 	app := fiber.New()
 	app.Get("/expenses", controller.GetExpensesHandler)
 	t.Run("Should called get expenses service", func(t *testing.T) {
-		id := int64(1)
-		req := httptest.NewRequest(fiber.MethodPut, fmt.Sprintf("/expenses/%d", id), nil)
+		req := httptest.NewRequest(fiber.MethodGet, "/expenses", nil)
 		_, err := app.Test(req, 100)
 		if assert.NoError(t, err) {
 			assert.Equal(t, 1, mockService.GetsCalled)
