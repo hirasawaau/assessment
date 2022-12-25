@@ -90,7 +90,7 @@ func TestPostExpenses(t *testing.T) {
 }
 
 func (m *MockService) GetExpenseById(id int64) (*expenses.ExpenseEntity, error) {
-	m.GetsCalled++
+	m.GetCalled++
 	return &expenses.ExpenseEntity{
 		ID:     id,
 		Title:  "Test",
@@ -178,6 +178,7 @@ func TestPutExpenseById(t *testing.T) {
 
 func (m *MockService) GetExpenses() ([]*expenses.ExpenseEntity, error) {
 	m.GetsCalled++
+	fmt.Println("Called")
 	return []*expenses.ExpenseEntity{
 		{
 			ID:     1,
@@ -196,7 +197,7 @@ func TestGetsExpenses(t *testing.T) {
 	}
 
 	app := fiber.New()
-	app.Get("/expenses", controller.GetExpensesHandler)
+	app.Get("/expenses", controller.GetAllExpensesHandler)
 	t.Run("Should called get expenses service", func(t *testing.T) {
 		req := httptest.NewRequest(fiber.MethodGet, "/expenses", nil)
 		_, err := app.Test(req, 100)
