@@ -82,3 +82,35 @@ func TestIntegrationGetExpenses(t *testing.T) {
 	})
 
 }
+
+func TestIntegrationPutExpenses(t *testing.T) {
+	t.Run("Should return correct result", func(t *testing.T) {
+		id := int64(1)
+		app := fiber.New()
+
+		go utils.StartIntegrationApp(t, app)
+		utils.WaitForConnection()
+
+		payload := `{"title":"Test","amount":1,"note":"Test Expense","tags":["Hello"]}`
+		expected := fmt.Sprintf(`{"id":%d,"title":"Test","amount":1,"note":"Test Expense","tags":["Hello"]}`, id)
+
+		req, err := http.NewRequest(fiber.MethodPut, utils.ConcatUrl("expenses", fmt.Sprintf("%d", id)), strings.NewReader(payload))
+		assert.NoError(t, err)
+		req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+		client := http.Client{}
+		resp, err := client.Do(req)
+		assert.NoError(t, err)
+		bodyRes, err := io.ReadAll(resp.Body)
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+			assert.Equal(t, expected, strings.TrimSpace(string(bodyRes)))
+		}
+
+		assert.NoError(t, err)
+		err = app.Shutdown()
+		assert.NoError(t, err)
+	})
+
+}

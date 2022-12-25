@@ -14,16 +14,23 @@ type ExpensesController struct {
 	Service  IExpensesService
 }
 
-type ExpensesDto struct {
+type ExpensesCreateDto struct {
 	Title  string   `json:"title" validate:"required"`
 	Amount int      `json:"amount" validate:"required"`
 	Note   string   `json:"note" validate:"required"`
 	Tags   []string `json:"tags" validate:"required"`
 }
 
+type ExpensesUpdateDto struct {
+	Title  string   `json:"title"`
+	Amount int64    `json:"amount"`
+	Note   string   `json:"note"`
+	Tags   []string `json:"tags"`
+}
+
 func (ec *ExpensesController) PostExpensesHandler(c *fiber.Ctx) error {
 	validate := validator.New()
-	body := new(ExpensesDto)
+	body := new(ExpensesCreateDto)
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(err)
 	}
@@ -32,12 +39,7 @@ func (ec *ExpensesController) PostExpensesHandler(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(err)
 	}
 
-	res, err := ec.Service.CreateExpense(ExpenseEntity{
-		Title:  body.Title,
-		Amount: body.Amount,
-		Note:   body.Note,
-		Tags:   body.Tags,
-	})
+	res, err := ec.Service.CreateExpense(*body)
 
 	if err != nil {
 		fmt.Println("SQL ERROR", err)
@@ -61,8 +63,36 @@ func (ec *ExpensesController) GetExpensesHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(resp)
 }
 
+func (ec *ExpensesController) PutExpensesHandler(c *fiber.Ctx) error {
+	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+
+	validate := validator.New()
+	body := new(ExpensesUpdateDto)
+	if err := c.BodyParser(&body); err != nil {
+		fmt.Println("THIS ERROR")
+		return c.Status(http.StatusBadRequest).JSON(err)
+	}
+
+	if err := validate.Struct(*body); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(err)
+	}
+
+	resp, err := ec.Service.UpdateExpenseById(id, *body)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(resp)
+
+}
+
 func (ec *ExpensesController) Handle() {
 	g := ec.Instance.Group("/expenses")
 	g.Post("", ec.PostExpensesHandler)
 	g.Get(":id", ec.GetExpensesHandler)
+	g.Put(":id", ec.PutExpensesHandler)
 }
