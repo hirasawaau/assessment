@@ -100,3 +100,26 @@ func TestUpdateExpenseById(t *testing.T) {
 		}
 	})
 }
+
+func TestGetExpenses(t *testing.T) {
+	t.Run("should get expenses with correct arguments", func(t *testing.T) {
+		dbx, mock, err := utils.GetMockDB()
+		defer dbx.Close()
+		service := &expenses.ExpensesService{
+			DB: dbx,
+		}
+
+		expectedRow := sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).AddRow(1, "title", 0, "note", pq.Array([]string{"tag1", "tag2"}))
+		mock.ExpectQuery("SELECT (.+) FROM expenses").WillReturnRows(expectedRow)
+
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+
+		records, err := service.GetExpenses()
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, 1, len(records))
+		}
+	})
+}

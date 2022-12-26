@@ -15,6 +15,7 @@ type IExpensesService interface {
 	CreateExpense(e ExpensesCreateDto) (*ExpenseEntity, error)
 	GetExpenseById(id int64) (*ExpenseEntity, error)
 	UpdateExpenseById(id int64, e ExpensesUpdateDto) (*ExpenseEntity, error)
+	GetExpenses() ([]*ExpenseEntity, error)
 }
 
 type ExpenseEntity struct {
@@ -46,30 +47,31 @@ func (es *ExpensesService) GetExpenseById(id int64) (*ExpenseEntity, error) {
 	return res, nil
 }
 
-func GetUpdateExpenseQuery(e ExpensesUpdateDto) string {
-	UPDATE_QUERY := `UPDATE expenses SET `
-	if e.Title != "" {
-		UPDATE_QUERY += `title = $1, `
-	}
-	if e.Amount != 0 {
-		UPDATE_QUERY += `amount = $2, `
-	}
-	if e.Note != "" {
-		UPDATE_QUERY += `note = $3, `
-	}
-	if len(e.Tags) != 0 {
-		UPDATE_QUERY += `tags = $4 `
-	}
-	UPDATE_QUERY += `WHERE id = $5 RETURNING *`
-	return UPDATE_QUERY
-}
-
 func (es *ExpensesService) UpdateExpenseById(id int64, e ExpensesUpdateDto) (*ExpenseEntity, error) {
 	UPDATE_QUERY := `UPDATE expenses SET title = COALESCE($1, title), amount = COALESCE($2, amount), note = COALESCE($3, note), tags = COALESCE($4, tags) WHERE id = $5 RETURNING *`
 	res := new(ExpenseEntity)
 	if err := es.DB.QueryRowx(UPDATE_QUERY,
 		e.Title, e.Amount, e.Note, pq.Array(e.Tags), id).StructScan(res); err != nil {
 		return nil, err
+	}
+
+	return res, nil
+}
+
+func (es *ExpensesService) GetExpenses() ([]*ExpenseEntity, error) {
+	GET_QUERY := "SELECT * FROM expenses"
+	rows, err := es.DB.Queryx(GET_QUERY)
+	if err != nil {
+		return nil, err
+	}
+
+	var res []*ExpenseEntity
+	for rows.Next() {
+		var e ExpenseEntity
+		if err := rows.StructScan(&e); err != nil {
+			return nil, err
+		}
+		res = append(res, &e)
 	}
 
 	return res, nil
