@@ -26,7 +26,9 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:postgres@database:5432/postgres?sslmode=disable
     networks:
-      - kbtg-assign    
+      - kbtg-assign
+    depends_on:
+      - database    
 
 networks:
   kbtg-assign:
