@@ -143,3 +143,28 @@ func TestIntegrationGetExpenses(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestAuth(t *testing.T) {
+	t.Run("Should return 401", func(t *testing.T) {
+		app := fiber.New()
+		go utils.StartIntegrationApp(t, app)
+
+		utils.WaitForConnection()
+		req, err := http.NewRequest(fiber.MethodGet, utils.ConcatUrl("expenses"), nil)
+		assert.NoError(t, err)
+		req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+		req.Header.Set(fiber.HeaderAuthorization, "November 10, 2009wrong_token")
+
+		client := http.Client{}
+		resp, err := client.Do(req)
+		assert.NoError(t, err)
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, fiber.StatusUnauthorized, resp.StatusCode)
+		}
+
+		assert.NoError(t, err)
+		err = app.Shutdown()
+		assert.NoError(t, err)
+	})
+}

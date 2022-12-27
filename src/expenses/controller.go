@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
+	"github.com/hirasawaau/assessment/src/middleware"
 )
 
 type ExpensesController struct {
@@ -101,6 +102,7 @@ func (ec *ExpensesController) GetAllExpensesHandler(c *fiber.Ctx) error {
 
 func (ec *ExpensesController) Handle() {
 	g := ec.Instance.Group("/expenses")
+	g.Use(middleware.AuthMiddleware)
 	g.Post("", ec.PostExpensesHandler)
 	g.Get(":id", ec.GetExpensesHandler)
 	g.Put(":id", ec.PutExpensesHandler)
